@@ -4,13 +4,13 @@
 This script parses *.3mf file of a 4x4 array of flat samples and calculates max thickness of each sample.
 
 Orginal file:
-![](images/sample-step1.png)
+![](images/samples-step1.png)
 
 Rotated:
-![](images/sample-step2.png)
+![](images/samples-step2.png)
 
 Splited into samples:
-![](images/sample-step3.png)
+![](images/samples-step3.png)
 
 Thickness of samples:
 ```
