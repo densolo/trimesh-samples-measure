@@ -6,6 +6,7 @@ from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
 import matplotlib.gridspec as gridspec
 
 from .calcs import *
+from .formats import *
 
 
 def draw_points(plt, all_points):
@@ -24,7 +25,7 @@ def draw_points(plt, all_points):
 def draw_points4(plt, all_points):
     x_arr, y_arr, z_arr = xcol(all_points), ycol(all_points), zcol(all_points)
 
-    plt.figure(figsize=(20, 10))
+    fig = plt.figure(figsize=(20, 10))
     ax1 = plt.subplot(221, projection='3d')
     ax1.set_xlabel('X')
     ax1.set_ylabel('Y')
@@ -52,6 +53,14 @@ def draw_points4(plt, all_points):
     ax1.set_zlabel('Z')
     ax1.view_init(elev=90, azim=0)
     ax1.scatter(x_arr, y_arr, z_arr, s=0.01, c='gray')
+
+    return fig
+
+
+def save_image(path, suffix):
+    outpath = build_output_file(path, suffix, 'png')
+    print("Saving image into {}".format(outpath))
+    plt.savefig(outpath)
 
 
 def draw_samples(plt, xy_samples, xy_lows, x_rows, y_rows, x_color=None, y_color=None):

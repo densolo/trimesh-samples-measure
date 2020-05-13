@@ -9,8 +9,11 @@ X_AXIS = 0
 Y_AXIS = 1
 Z_AXIS = 2
 
+AXIS_NAMES = ['X', 'Y', 'X'] 
+
 
 def load_points(path, size=None):
+    print("Reading 3mf file {}".format(path))
     assert os.path.exists(path)
     mesh = trimesh.load_mesh(path)
 
@@ -23,6 +26,8 @@ def load_points(path, size=None):
     for t in triangles:
         for p in t:
             points.append([p[X_AXIS], p[Y_AXIS], p[Z_AXIS]])
+
+    print("Loaded {} 3d points".format(len(points)))
     return points
 
 
@@ -44,7 +49,7 @@ def rotate_xy(x_arr, y_arr, degree):
 
 
 def rotate_xy_rad(x_arr, y_arr, r):
-    print("rotate: {} degree".format(r*180/pi))
+    print("Rotate: {} degree".format(r*180/pi))
 
     for i in range(len(x_arr)):
         x = x_arr[i]
@@ -59,7 +64,7 @@ def rotate_xy_rad(x_arr, y_arr, r):
 
 
 def rotate_points_xy_rad(points, dim1, dim2, r):
-    print("rotate {}{}: {} degree".format(dim1, dim2, r*180/pi))
+    print("Rotate {}{}: {} degree".format(AXIS_NAMES[dim1], AXIS_NAMES[dim2], r*180/pi))
 
     for i in range(len(points)):
         p = list(points[i])

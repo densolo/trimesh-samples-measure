@@ -1,4 +1,5 @@
 
+import os
 from .calcs import *
 
 
@@ -18,8 +19,14 @@ def fmt20f(f):
     return "{:+03.0f}".format(f)
 
 
-def print_thinkness_csv(xy_samples):
-    print("sample,max,x,y")
+def generate_thinkness_csv(xy_samples):
+    lines = []
+    lines.append([
+        "SAMPLE",
+        "MAX",
+        "X",
+        "Y" 
+    ])
     for i, spoints in enumerate(xy_samples):
         heights = sorted(zcol(spoints))
         # print(" {} .. {}".format(heights[:5], heights[-5:]))
@@ -27,4 +34,35 @@ def print_thinkness_csv(xy_samples):
         high = sum(heights[-50:-10])/40
         #h = '{} .. {}'.format(['{:+.3f}'.format(z) for z in heights[:5]], ['{:+.3f}'.format(z) for z in heights[-5:]])
         #print("sample {:02d} thickness {:.3f}: x:{:+3.0f} y:{:+3.0f}".format(i+1, high-low, spoints[0][0], spoints[0][1]))
-        print("{:02},{:.3f},{:+03.0f},{:+03.0f}".format(i+1, high-low, spoints[0][X_AXIS], spoints[0][Y_AXIS]))
+        lines.append([
+            "{:02}".format(i+1),
+            "{:.3f}".format(high-low), 
+            "{:+03.0f}".format(spoints[0][X_AXIS]),
+            "{:+03.0f}".format(spoints[0][Y_AXIS])
+        ])
+    return lines
+
+
+def print_thinkness_csv(xy_sample, path):
+
+    lines = generate_thinkness_csv(xy_sample)
+
+    for line in lines:
+        print(" | ".join(["{:10}".format(c) for c in line]))
+
+    csv_path = build_output_file(path, '', 'csv')
+    print("Writing results in csv {}".format(csv_path))
+    f = open(csv_path, 'w')
+    try:
+        for line in lines:
+            f.write(",".join(line) + "\n")
+        f.write("\n")
+    finally:
+        f.close()
+
+
+def build_output_file(path, suffix, ext):
+    prefix = path.rpartition('.')[0]
+    if suffix:
+        suffix = "-" + suffix
+    return '{}{}.{}'.format(prefix, suffix, ext)
