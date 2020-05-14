@@ -115,6 +115,7 @@ def measure_file_with_images(path):
     save_image(path, '2d-matrix')
 
     # plt.show()
+    print("Done")
 
 
 def validate_samples_or_fail(xy_samples, points):
