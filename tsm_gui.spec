@@ -3,10 +3,15 @@
 block_cipher = None
 
 a = Analysis(['tsm_gui.py'],
-             pathex=['C:\\Works\\trimesh-samples-measure'],
+             #pathex=['C:\\Works\\trimesh-samples-measure'],
+             pathex=['/Users/denis/work/matlab/trimesh-samples-measure'],
              binaries=[],
              datas=[
-                 ('venv\\Lib\\site-packages\\trimesh\\resources', 'trimesh\\resources'),
+                 #('venv\\Lib\\site-packages\\trimesh\\resources', 'trimesh\\resources'),
+                 #('sample_measure_lib\\resources', 'sample_measure_lib\\resources'),
+                 ('venv/lib/python3.7/site-packages/trimesh/resources', 'trimesh/resources'),
+                 ('sample_measure_lib/resources', 'sample_measure_lib/resources'),
+                 ('venv/lib/python3.7/site-packages/pygubu', 'pygubu'),
              ],
              hiddenimports=[],
              hookspath=[],

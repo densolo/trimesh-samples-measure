@@ -49,7 +49,7 @@ def rotate_xy(x_arr, y_arr, degree):
 
 
 def rotate_xy_rad(x_arr, y_arr, r):
-    print("Rotate: {} degree".format(r*180/pi))
+    print("Rotate: {:.2f} degree".format(r*180/pi))
 
     for i in range(len(x_arr)):
         x = x_arr[i]

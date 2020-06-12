@@ -4,6 +4,7 @@ from matplotlib import style
 import matplotlib.lines as mlines
 from matplotlib.ticker import (AutoMinorLocator, MultipleLocator)
 import matplotlib.gridspec as gridspec
+from mpl_toolkits.mplot3d import Axes3D
 
 from .calcs import *
 from .formats import *
@@ -76,7 +77,8 @@ def draw_samples(plt, xy_samples, xy_lows, x_rows, y_rows, x_color=None, y_color
             low_points = [xy_lows[i + y_rows+j]]
             x_arr, y_arr, z_arr = xcol(points), ycol(points), zcol(points)
 
-            ax_n = plt.subplot(gs[x_rows-i-1, j])
+            #ax_n = plt.subplot(gs[x_rows-i-1, j])
+            ax_n = plt.subplot(gs[j, i])
             ax_n.set_xlim(min(y_arr), max(y_arr))
             ax_n.set_ylim(*ylim)
             ax_n.minorticks_on()
@@ -86,17 +88,26 @@ def draw_samples(plt, xy_samples, xy_lows, x_rows, y_rows, x_color=None, y_color
             ax_n.set_xlabel('y ({})'.format(k+1))
             ax_n.set_ylabel('z')
 
-            ax_n.scatter(ycol(low_points), zcol(low_points), s=20, c='red')
+            # ax_n.scatter(ycol(low_points), zcol(low_points), s=20, c='red')
+
+            # ax_n = plt.subplot(gs[j, x_rows+i])
+            # ax_n.set_xlim(min(x_arr), max(x_arr))
+            # ax_n.set_ylim(*ylim)
+            # ax_n.minorticks_on()
+            # ax_n.grid(which='major', lw=0.5, c='black')
+            # ax_n.grid(which='minor', alpha=0.5)
+            # ax_n.scatter(x_arr, z_arr, s=0.01, c=x_color or 'deepskyblue')
+            # ax_n.set_xlabel('x ({})'.format(k+1))
+            # ax_n.set_ylabel('z')
 
             ax_n = plt.subplot(gs[j, x_rows+i])
             ax_n.set_xlim(min(x_arr), max(x_arr))
-            ax_n.set_ylim(*ylim)
+            ax_n.set_ylim(max(y_arr), min(y_arr))
             ax_n.minorticks_on()
             ax_n.grid(which='major', lw=0.5, c='black')
             ax_n.grid(which='minor', alpha=0.5)
-            ax_n.scatter(x_arr, z_arr, s=0.01, c=x_color or 'deepskyblue')
+            ax_n.scatter(x_arr, y_arr, s=0.01, c=x_color or 'green')
             ax_n.set_xlabel('x ({})'.format(k+1))
-            ax_n.set_ylabel('z')
+            ax_n.set_ylabel('y')
 
-            ax_n.scatter(xcol(low_points), zcol(low_points), s=20, c='red')
-
+            # ax_n.scatter(xcol(low_points), zcol(low_points), s=20, c='red')

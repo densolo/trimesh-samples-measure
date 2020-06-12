@@ -3,42 +3,23 @@
 
 This script parses *.3mf file of a 4x4 array of flat samples and calculates max thickness of each sample.
 
-# How to install
+# How to build
 
-1. Install Python
-
-The script requires Python 3. The simplest way to get Python with necessary packages it to install Anaconda python distribution.
-
-For Windows: https://docs.anaconda.com/anaconda/install/windows/
-For Mac:https://docs.anaconda.com/anaconda/install/mac-os/
-
-2. Install the script
-
-Checkout with git
+1. Install Python3
+2. Install dependencies
 ```
-git clone https://github.com/densolo/trimesh-samples-measure.git
-cd trimesh-samples-measure.git
-```
-
-Or download as zip from GitHub and unpack
-
-
-3. Install dependencies
-
-
-*MacOS*
-```
-cd trimesh-samples-measure
-
-# create virutal environment to install dependencies
 python -v venv venv
 source venv/bin/activate
-
 python -m pip install -r requirements.txt
+```
+3. Build
+```
+tkinter tms_gui.spec
 ```
 
 # How to use
 
+## Command line 
 Run from the command line:
 ```
 # optionally activate python environment
@@ -97,6 +78,11 @@ Writing results in csv data/Corner discs 1.csv
 Saving image into data/Corner discs 1-3d-rotated.png
 Saving image into data/Corner discs 1-2d-matrix.png
 ```
+
+## GUI
+
+Run the app dist/tsm_gui.exe
+Open 3mf file 
 
 
 # Calculation process

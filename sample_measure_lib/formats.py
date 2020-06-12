@@ -50,6 +50,10 @@ def print_thinkness_csv(xy_sample, path):
     for line in lines:
         print(" | ".join(["{:10}".format(c) for c in line]))
 
+    save_thinkness_csv(lines, path)
+
+
+def save_thinkness_csv(lines, path):
     csv_path = build_output_file(path, '', 'csv')
     print("Writing results in csv {}".format(csv_path))
     f = open(csv_path, 'w')
