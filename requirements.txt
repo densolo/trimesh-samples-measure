@@ -2,3 +2,4 @@ trimesh
 lxml
 matplotlib
 networkx
+PyQt5
