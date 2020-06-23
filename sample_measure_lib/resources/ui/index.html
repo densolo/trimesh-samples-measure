@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+        
+        
+        <link rel="stylesheet" href="css/bootstrap.min.css" crossorigin="anonymous"/>
+
+        <script src="qrc:///qtwebchannel/qwebchannel.js"></script>
+        
+        
+    </head>
+<body class="text-center">
+    <div id="app" class="app"></div>
+
+    <script>
+        var QWebBackend;
+        new QWebChannel(qt.webChannelTransport, function (channel) {
+            QWebBackend = channel.objects.backend;
+        });
+     </script>
+    
+    <script src="main.ui.bundle.72296bc37dcb5b93fa1d.js"></script>
+</body>
+</html>

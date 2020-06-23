@@ -8,3 +8,6 @@ build/
 dist/
 trimesh.code-workspace
 *.bk
+node_modules
+tsm_gui
+*.pyo

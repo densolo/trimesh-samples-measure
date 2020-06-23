@@ -1,0 +1,49 @@
+
+import org.gradle.internal.os.OperatingSystem
+
+plugins {
+    id 'distribution'
+}
+
+version = "0.0.7"
+
+ext {
+    isWindows = OperatingSystem.current().isWindows()
+    platformExt = isWindows ? ".exe": ""
+    platformCmdExt = isWindows ? ".cmd": ""
+}
+
+
+task copyCss(type:Copy) {
+    from "sample_measure_ui/node_modules/bootstrap/dist/css"
+    into "sample_measure_lib/resources/ui/css/"
+    include "bootstrap.min.css"
+}
+
+
+task npmInstall(type:Exec) {
+    workingDir "${project.projectDir}/sample_measure_ui"
+  
+    commandLine "npm${platformCmdExt}", 'install'
+}
+
+task npmClean() {
+    doLast {
+        delete fileTree("${projectDir}/sample_measure_lib/resources/ui") {
+            include "*bundle*js"
+        }
+    }
+}
+
+task npmBuild(type:Exec) {
+    workingDir "${project.projectDir}/sample_measure_ui"
+  
+    commandLine "npm${platformCmdExt}", 'run', 'build'
+}
+
+npmBuild.dependsOn copyCss, npmClean
+
+
+task buildInstaller(type: Exec) {
+    commandLine "pyinstaller", "${projectDir}/tsm_guid.spec", "--workpath=${projectDir}"
+}
