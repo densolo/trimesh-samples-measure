@@ -2,3 +2,5 @@ trimesh
 lxml
 matplotlib
 networkx
+scipy
+skimage

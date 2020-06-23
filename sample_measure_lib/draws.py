@@ -74,7 +74,7 @@ def draw_samples(plt, xy_samples, xy_lows, x_rows, y_rows, x_color=None, y_color
         for j in range(y_rows):
             k = i + y_rows*j
             points = xy_samples[k]
-            low_points = [xy_lows[i + y_rows+j]]
+            #low_points = [xy_lows[i + y_rows+j]]
             x_arr, y_arr, z_arr = xcol(points), ycol(points), zcol(points)
 
             #ax_n = plt.subplot(gs[x_rows-i-1, j])

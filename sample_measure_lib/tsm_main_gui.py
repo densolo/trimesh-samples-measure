@@ -27,7 +27,7 @@ def redirector(text, inputStr=""):
     text.insert(END, inputStr)
 
 
-class TextQueue():
+class TaskQueue():
 
     def __init__(self, root, textWidget):
         self.root = root
@@ -36,13 +36,22 @@ class TextQueue():
         self.root.after(500, self.process_queue)
 
     def insert(self, pos, txt):
-        self.queue.put(txt)
+        self.queue.put(('output', txt))
+
+    def emit_done(self):
+        self.queue.put(('done', None))
 
     def process_queue(self):
         try:
             for _ in range(100):
-                msg = self.queue.get(0)
-                self.textWidget.insert(END, msg)
+                event, msg = self.queue.get(0)
+                
+                if event == 'output':
+                    self.textWidget.insert(END, msg)
+
+                elif event == 'done':
+                    enable_buttons(self.root, True)
+
         except queue.Empty:
             pass
         
@@ -54,14 +63,18 @@ class MainWindow():
     def __init__(self, root):
         self.root = root
         self.filename = ''
-        self.configure()
+        self.start_id = ''
         self.thread = None
+
+        self.configure()
+
+        self.taskQueue = TaskQueue(root, get_output_widget(root))
 
     def configure(self):
 
-        Button(text="Open 3mf File", command=self.handle_open).grid(row=0, column=1, pady=10, padx=10, sticky=W)
+        Label(text="File").grid(row=0, column=0, pady=10, padx=10, sticky=E)
+        Button(text="Open 3mf File", name='button-open', command=self.handle_open).grid(row=0, column=1, pady=10, padx=10, sticky=W)
 
-        Label(text="File").grid(row=1, column=0, pady=10, padx=10, sticky=E)
         Label(text="", name='label-filename').grid(row=1, column=1, columnspan=4, pady=10, padx=10, sticky=W)
 
         Label(text="ID").grid(row=2, column=0, pady=10, padx=10, sticky=E)
@@ -73,13 +86,14 @@ class MainWindow():
         for _id in ('A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1'):
             self.__add_id_button(idFrame, _id)
             
-        Button(text="Run Measures", command=self.handle_run).grid(row=3, column=1, pady=10, padx=10, sticky=W)
+        Button(text="Run Measures", name='button-run', command=self.handle_run).grid(row=3, column=1, pady=10, padx=10, sticky=W)
 
         Label(text="Output").grid(row=4, column=0, pady=10, padx=10, sticky=NE)
         textFrame = Frame(self.root, name='frame-output')
         textFrame.grid(row=4, column=1, columnspan=4, pady=10, padx=10)
         self.configure_textarea(textFrame)
 
+        self.update_states()
 
     def __add_id_button(self,idFrame, _id):
         Button(idFrame, text=_id, command=lambda: self.handle_id_button(_id)).pack(side=LEFT)
@@ -91,7 +105,7 @@ class MainWindow():
 
     def configure_textarea(self, root):
         S = tk.Scrollbar(root)
-        T = tk.Text(root, name='text-output', height=40, width=120)
+        T = tk.Text(root, name='text-output', height=20, width=120)
         S.pack(side=tk.RIGHT, fill=tk.Y)
         T.pack(side=tk.LEFT, fill=tk.Y)
         S.config(command=T.yview)
@@ -105,17 +119,47 @@ class MainWindow():
             title = "Select 3mf file", 
             filetypes = (("3mf files","*.3mf"), ("all files","*.*")))
         
+        self.update_states()
+        self.handle_id_button('')
+        get_output_widget(self.root).delete(1.0, END)
+        #print("Press 'Run Measures'" % (self.filename))
+
+    def handle_run(self):        
+        if not self.filename:
+            return
+
+        self.start_id = self.root.nametowidget('frame-id.entry-id').get().strip()
+        enable_buttons(self.root, False)
+
+        self.thread = threading.Thread(target=self.run_worker)
+        self.thread.start()
+
+    def run_worker(self):
+        from sample_measure_lib.tsm_main_v3 import measure_file_with_images
+        try:
+            measure_file_with_images(self.filename, start_id=self.start_id)
+        finally:
+            self.taskQueue.emit_done()
+
+    def update_states(self):
         labelFile = self.root.nametowidget('label-filename')
-        labelFile.configure(text=self.filename)
-
-        print("Opened file: %s" % (self.filename))
-
-    def handle_run(self):
-        from sample_measure_lib.tsm_main import measure_file_with_images
-
+        buttonRun = self.root.nametowidget('button-run')
         if self.filename:
-            self.thread = threading.Thread(target=measure_file_with_images, args=[self.filename])
-            self.thread.start()
+            labelFile.configure(text=self.filename)
+            buttonRun.configure(state=NORMAL)
+        else:
+            labelFile.configure(text="<no file opened>")
+            buttonRun.configure(state=DISABLED)
+
+
+def enable_buttons(root, enabled):
+    state = NORMAL if enabled else DISABLED
+    root.nametowidget('button-open').configure(state=state)
+    root.nametowidget('button-run').configure(state=state)
+
+
+def get_output_widget(root):
+    return root.nametowidget('frame-output.text-output')
 
 
 def main():
@@ -123,7 +167,6 @@ def main():
     root.title("3MF Samples Measure")
 
     win = MainWindow(root)
-    text = TextQueue(root, root.nametowidget('frame-output.text-output'))
-    r = redirector(text)
+    r = redirector(win.taskQueue)
 
     root.mainloop()
