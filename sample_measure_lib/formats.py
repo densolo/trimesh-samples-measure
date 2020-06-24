@@ -1,5 +1,7 @@
 
 import os
+import re
+
 from .calcs import *
 
 
@@ -43,9 +45,72 @@ def generate_thinkness_csv(xy_samples):
     return lines
 
 
+def validate_start_id(start_id):
+    if not start_id:
+        start_id = 'A1'
+    
+    if not re.match('^[A-Z][0-9]$', start_id):
+        raise Exception("ID must be [A-Z][0-9] e.g. A1 or E1")
+
+
+def format_sample_id(x, y, start_id):
+    start_id = start_id or 'A1'
+    
+    x_start = start_id[0]
+    y_start = int(start_id[1])
+    s_id = "{}{}".format(chr(ord(x_start) + x), y_start + y)
+    return s_id.upper()
+
+
+def generate_thinkness_csv_id(xy_samples, x_rows, y_rows, start_id, calc_low=False):
+    lines = []
+    lines.append([
+        "ID",
+        "Z",
+        "X",
+        "Y" 
+    ])
+
+    validate_start_id(start_id)
+    
+    for j in range(y_rows):
+        for i in range(x_rows):
+            k = i + y_rows*j
+            spoints = xy_samples[k]
+            s_id = format_sample_id(i, j, start_id)
+
+            heights = sorted(zcol(spoints))
+            # print(" {} .. {}".format(heights[:5], heights[-5:]))
+            low = sum(heights[:100])/100 if calc_low else 0
+            high = sum(heights[-50:-10])/40
+            #h = '{} .. {}'.format(['{:+.3f}'.format(z) for z in heights[:5]], ['{:+.3f}'.format(z) for z in heights[-5:]])            
+            #print("sample {:02d} thickness {:.3f}: x:{:+3.0f} y:{:+3.0f}".format(i+1, high-low, spoints[0][0], spoints[0][1]))
+
+            x = abs(max(xcol(spoints)) - min(xcol(spoints)))
+            y = abs(max(ycol(spoints)) - min(ycol(spoints)))
+
+            lines.append([
+                s_id,
+                "{:.3f}".format(high-low), 
+                "{:06.3f}".format(x),
+                "{:06.3f}".format(y)
+            ])
+    return lines
+
+
 def print_thinkness_csv(xy_sample, path):
 
     lines = generate_thinkness_csv(xy_sample)
+
+    for line in lines:
+        print(" | ".join(["{:10}".format(c) for c in line]))
+
+    save_thinkness_csv(lines, path)
+
+
+def print_thinkness_csv_id(xy_sample, x_rows, y_rows, start_id, path):
+
+    lines = generate_thinkness_csv_id(xy_sample, x_rows, y_rows, start_id)
 
     for line in lines:
         print(" | ".join(["{:10}".format(c) for c in line]))

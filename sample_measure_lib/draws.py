@@ -52,19 +52,22 @@ def draw_points4(plt, all_points):
     ax1.set_xlabel('X')
     ax1.set_ylabel('Y')
     ax1.set_zlabel('Z')
-    ax1.view_init(elev=90, azim=0)
+    ax1.view_init(elev=-90, azim=270)
     ax1.scatter(x_arr, y_arr, z_arr, s=0.01, c='gray')
+
+
+    fig.tight_layout()
 
     return fig
 
 
 def save_image(path, suffix):
     outpath = build_output_file(path, suffix, 'png')
-    print("Saving image into {}".format(outpath))
+    print("Generating image into {}".format(outpath))
     plt.savefig(outpath)
 
 
-def draw_samples(plt, xy_samples, xy_lows, x_rows, y_rows, x_color=None, y_color=None):
+def draw_samples(plt, xy_samples, xy_lows, x_rows, y_rows, x_color=None, y_color=None, start_id=None):
     ylim = [-0.1, 2]
 
     fig = plt.figure(figsize=(20, 10))
@@ -74,6 +77,11 @@ def draw_samples(plt, xy_samples, xy_lows, x_rows, y_rows, x_color=None, y_color
         for j in range(y_rows):
             k = i + y_rows*j
             points = xy_samples[k]
+
+            if start_id:
+                s_id = format_sample_id(i, j, start_id)
+            else:
+                s_id = k + 1
             #low_points = [xy_lows[i + y_rows+j]]
             x_arr, y_arr, z_arr = xcol(points), ycol(points), zcol(points)
 
@@ -85,7 +93,7 @@ def draw_samples(plt, xy_samples, xy_lows, x_rows, y_rows, x_color=None, y_color
             ax_n.grid(which='major', lw=0.5, c='black')
             ax_n.grid(which='minor', alpha=0.5)
             ax_n.scatter(y_arr, z_arr, s=0.01, c=y_color or 'blue')
-            ax_n.set_xlabel('y ({})'.format(k+1))
+            ax_n.set_xlabel('y ({})'.format(s_id))
             ax_n.set_ylabel('z')
 
             # ax_n.scatter(ycol(low_points), zcol(low_points), s=20, c='red')
@@ -101,13 +109,22 @@ def draw_samples(plt, xy_samples, xy_lows, x_rows, y_rows, x_color=None, y_color
             # ax_n.set_ylabel('z')
 
             ax_n = plt.subplot(gs[j, x_rows+i])
-            ax_n.set_xlim(min(x_arr), max(x_arr))
-            ax_n.set_ylim(max(y_arr), min(y_arr))
+
+            x0, x1 = min(x_arr), max(x_arr)
+            y0, y1 = min(y_arr), max(y_arr)
+            w = max(abs(x1-x0), abs(y1-y0))
+            m = w*0.05
+            ax_n.set_xlim(x0-m, x0+w+m)
+            ax_n.set_ylim(y0+w+m, y0-m)
+
+            # ax_n.set_xlim(min(x_arr), max(x_arr))
+            # ax_n.set_ylim(max(y_arr), min(y_arr))
+
             ax_n.minorticks_on()
             ax_n.grid(which='major', lw=0.5, c='black')
             ax_n.grid(which='minor', alpha=0.5)
             ax_n.scatter(x_arr, y_arr, s=0.01, c=x_color or 'green')
-            ax_n.set_xlabel('x ({})'.format(k+1))
+            ax_n.set_xlabel('x ({})'.format(s_id))
             ax_n.set_ylabel('y')
 
             # ax_n.scatter(xcol(low_points), zcol(low_points), s=20, c='red')

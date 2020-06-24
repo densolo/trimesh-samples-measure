@@ -71,75 +71,24 @@ def measure_file_with_images(path, img_handler=None, start_id=None):
 
     img_handler.draw_points4_and_save(points, '3d-rotated')
 
-    print_thinkness_csv(xy_samples, path)
+    points = rotate_each_sample(points)
+    img_handler.draw_points4_and_save(points, '3d-rotated-xy')
+    
+    # inter_points, xy_shape = scatter_to_grid_points(points)
+    # img, shape_points = filter_shape_edges(inter_points, xy_shape)
+    # inter_points, xy_shape = scatter_to_grid_points(shape_points)
 
-    img_handler.draw_samples_and_save(xy_samples, None, x_rows, y_rows, '2d-matrix')
+    inter_points, xy_shape = scatter_to_grid_points(points)
+    img, shape_points = filter_shape_edges(inter_points, xy_shape)
+    points = adjust_zero(inter_points, shape_points)
+    
 
-    # # reverse upside down
-    # z_arr = [-z for z in z_arr]
-    # move_zero(x_arr, y_arr, z_arr)
-    # points = [(x_arr[i], y_arr[i], z_arr[i]) for i in range(len(x_arr))]
+    xy_samples, x_rows, y_rows = split_samples(points)
+    print_thinkness_csv_id(xy_samples, x_rows, y_rows, start_id, path)
 
-
-    # # rotate vertically for x and y to make flat
-    # r = polyfit_line2rad(ycol(points), zcol(points))
-    # rotate_xy_rad(y_arr, z_arr, -r)
-
-    # points = col2points(x_arr, y_arr, z_arr)
-    # r = polyfit_line2rad(xcol(points), zcol(points))
-    # rotate_xy_rad(x_arr, z_arr, -r)
-    # points = col2points(x_arr, y_arr, z_arr)
-
-    # # rotate horizontally to parallel with x and y axis
-    # xy_r = calc_xy_rad_by_corner(points)
-    # rotate_xy_rad(x_arr, y_arr, xy_r)
-    # all_points = col2points(x_arr, y_arr, z_arr)
+    img_handler.draw_samples_and_save(xy_samples, None, x_rows, y_rows, '2d-matrix', start_id=start_id)
 
 
-    # # split samples
-    # xy_samples, x_rows, y_rows = split_samples(all_points)
-    # validate_samples_or_fail(xy_samples, all_points, img_handler)
-
-    # # fine tune vertically to make flat
-
-    # # rotate Y/Z
-    # xy_lows = calc_lows(xy_samples)
-    # x_angles = cacl_x_angles_by_rows(xy_lows, x_rows, y_rows)
-    # #x_angles = calc_x_angles_by_corners(xy_samples, x_rows, y_rows)
-
-    # r = sum(x_angles)/len(x_angles)
-    # rotate_points_xy_rad(all_points, X_AXIS, Z_AXIS, -r)
-
-    # # rotate X/Z
-    # xy_samples, _, _ = split_samples(all_points)
-    # y_angles = calc_y_angles_by_rows(xy_lows, x_rows, y_rows)
-    # #y_angles = calc_y_angles_by_corners(xy_samples, x_rows, y_rows)
-
-    # r = sum(y_angles)/len(y_angles)
-    # rotate_points_xy_rad(all_points, Y_AXIS, Z_AXIS, -r)
-
-    # # move up-down to baseline along Z
-    # adjust_zero_base(all_points)
-    # x_arr, y_arr, z_arr = xyz_cols(all_points)
-
-    # xy_samples, _, _ = split_samples(all_points)
-    # validate_samples_or_fail(xy_samples, all_points, img_handler)
-
-
-    # print_thinkness_csv(xy_samples, path)
-
-    # x_arr, y_arr, z_arr = xcol(all_points), ycol(all_points), zcol(all_points)
-    # img_handler.draw_points4_and_save(all_points, '3d-rotated')
-
-
-    # #points = xy_samples[-4] + xy_samples[-3] + xy_samples[-2] + xy_samples[-1]
-    # #x_arr, y_arr, z_arr = xyz_cols(points)
-
-
-    # Figure 3
-    #img_handler.draw_samples_and_save(xy_samples, xy_lows, x_rows, y_rows, '2d-matrix')
-
-    # plt.show()
     print("Done")
 
 
@@ -250,6 +199,12 @@ def calc_rotate_angle_degree(lines):
         if w and h:
             r = atan(h/w)
             a = r/consts.degree
+            
+            if -90 < a < -45:
+                a = 90 + a
+            elif 45 < a < 90:
+                a = a - 90
+                
             angles.append(a)
         
     angles =  np.unique(np.around(np.array(angles)/round_degrees)*round_degrees, return_counts=True)
@@ -285,7 +240,7 @@ def interpolate_points(real_points, grid_points, xy_shape):
     return np.vstack([B1.ravel(),B2.ravel(),Z.ravel()]).T
 
 
-def detect_lines(points, xy_shape):
+def detect_lines(points, xy_shape, plt=None):
     img = points[:,2].reshape(xy_shape[1], xy_shape[0])
     img2 = gaussian_filter(img, sigma=4)
     img4 = feature.canny(img2, sigma=5)
@@ -295,22 +250,22 @@ def detect_lines(points, xy_shape):
     print("detect_lines in {}".format(img.shape))
     lines = probabilistic_hough_line(img4, threshold=5, line_length=60, line_gap=20)
     
-    
-    fig = plt.figure(figsize=(20, 10))
-    ax1 = fig.add_subplot(121)
-    ax2 = fig.add_subplot(122)
-    
-    ax1.imshow(img, cmap=plt.cm.gray)
-    ax2.imshow(img4, cmap=plt.cm.gray)
-    
-    for line in lines:
-        p0, p1 = line
-        ax2.plot((p0[0], p1[0]), (p0[1], p1[1]), c='r')
+    if plt:
+        fig = plt.figure(figsize=(20, 10))
+        ax1 = fig.add_subplot(121)
+        ax2 = fig.add_subplot(122)
+
+        ax1.imshow(img, cmap=plt.cm.gray)
+        ax2.imshow(img4, cmap=plt.cm.gray)
+
+        for line in lines:
+            p0, p1 = line
+            ax2.plot((p0[0], p1[0]), (p0[1], p1[1]), c='r')
 
     return img6, lines
 
 
-def filter_shape_edges(points, xy_shape):
+def filter_shape_edges(points, xy_shape, plt=None):
     img = points[:,2].reshape(xy_shape[1], xy_shape[0])
     img2 = gaussian_filter(img, sigma=4)
     img4 = feature.canny(img2, sigma=5)
@@ -331,18 +286,18 @@ def filter_shape_edges(points, xy_shape):
     img7 = np.where(img6, 0, img)
     
     # debug begin
-    
-    fig = plt.figure(figsize=(20, 20))
-    ax1 = fig.add_subplot(221)
-    ax2 = fig.add_subplot(222)
-    ax3 = fig.add_subplot(223)
-    ax4 = fig.add_subplot(224)
-    
-    ax1.imshow(img, cmap=plt.cm.gray)
-    ax2.imshow(img7, cmap=plt.cm.gray)
-    ax3.imshow(img4, cmap=plt.cm.gray)
-    ax4.imshow(img4b, cmap=plt.cm.gray)
-    
+    if plt:
+        fig = plt.figure(figsize=(20, 20))
+        ax1 = fig.add_subplot(221)
+        ax2 = fig.add_subplot(222)
+        ax3 = fig.add_subplot(223)
+        ax4 = fig.add_subplot(224)
+        
+        ax1.imshow(img, cmap=plt.cm.gray)
+        ax2.imshow(img7, cmap=plt.cm.gray)
+        ax3.imshow(img4, cmap=plt.cm.gray)
+        ax4.imshow(img4b, cmap=plt.cm.gray)
+        
     # debug end
     
     return img, shape_points
@@ -398,6 +353,53 @@ def find_space_points(points, grid_step=0.5):
     indexes = real_points_tree.query(grid_points[:,:2], distance_upper_bound=grid_step)
     indexes = np.isinf(indexes[0])
     return grid_points[indexes]
+
+
+def adjust_zero(inter_points, shape_points):
+    heights = sorted(zcol(inter_points))
+    low = sum(heights[:100])/100
+
+    b = np.transpose(shape_points)
+    shape_points = np.transpose(np.vstack([b[:2,:], b[2,:] - low]))
+    #inter_points = np.array(list(filter(lambda p: p[2] > 0.1, inter_points)))
+    return shape_points
+
+
+def rotate_each_sample(points):
+    xy_samples, _, _ = split_samples(points)
+    new_points = []
+    for i, s in enumerate(xy_samples):
+        print("--- {} ---".format(i+1))
+        new_points.extend(rotate_new(s))
+    return new_points
+
+
+def rotate_new(s): 
+    #xy_r = deg2rad(6)
+    #s = rotate_points_xy(s, -xy_r)
+
+    x_arr, y_arr, z_arr = xyz_cols(s)
+
+    x_mid = sum(find_limit(x_arr))/2
+    y_mid = sum(find_limit(y_arr))/2
+
+    x_arr[:] = [x - x_mid for x in x_arr]
+    y_arr[:] = [y - y_mid for y in y_arr]
+    s = col2points(x_arr, y_arr, z_arr)
+
+    s = rotate_points_xy_auto90(s)
+
+    x_arr, y_arr, z_arr = xyz_cols(s)
+    x_arr[:] = [x + x_mid for x in x_arr]
+    y_arr[:] = [y + y_mid for y in y_arr]
+    s = col2points(x_arr, y_arr, z_arr)
+
+    #inter_points, xy_shape = scatter_to_grid_points(s)
+    #img, lines = detect_lines(inter_points, xy_shape)
+
+    #rotate_sample(s)
+    # draw_samples_ex(plt, [s], None, 1, 1)
+    return s
 
 
 if __name__ == '__main__':
