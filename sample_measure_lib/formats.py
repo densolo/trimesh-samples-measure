@@ -115,7 +115,8 @@ def print_thinkness_csv_id(xy_sample, x_rows, y_rows, start_id, path):
     for line in lines:
         print(" | ".join(["{:10}".format(c) for c in line]))
 
-    save_thinkness_csv(lines, path)
+    csv_path = save_thinkness_csv(lines, path)
+    return csv_path
 
 
 def save_thinkness_csv(lines, path):
@@ -128,6 +129,8 @@ def save_thinkness_csv(lines, path):
         f.write("\n")
     finally:
         f.close()
+
+    return csv_path
 
 
 def build_output_file(path, suffix, ext):

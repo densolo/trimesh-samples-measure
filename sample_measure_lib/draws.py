@@ -128,3 +128,10 @@ def draw_samples(plt, xy_samples, xy_lows, x_rows, y_rows, x_color=None, y_color
             ax_n.set_ylabel('y')
 
             # ax_n.scatter(xcol(low_points), zcol(low_points), s=20, c='red')
+
+
+def draw_image(plt, points, xy_shape):
+    img = points[:,2].reshape(xy_shape[1], xy_shape[0])
+    fig = plt.figure(figsize=(20, 20))
+    ax1 = fig.add_subplot(111)
+    ax1.imshow(img, cmap=plt.cm.gray)

@@ -2,6 +2,7 @@ import lxml
 import trimesh
 import os
 import sys
+import time
 
 
 import numpy as np
@@ -52,6 +53,8 @@ def main():
     
 
 def measure_file_with_images(path, img_handler=None, start_id=None):
+    t0 = time.time()
+
     print("measure_file_with_images file: {} ID: {}".format(path, start_id))
     if img_handler is None:
         img_handler = ImageHandler(plt, path)
@@ -64,7 +67,7 @@ def measure_file_with_images(path, img_handler=None, start_id=None):
     points = zero_normalize_points(points)
     points = rotate_flat_z(points)
     points = rotate_points_xy_auto90(points)
-    points = rotate_points_xy_max_samples(points)
+    #points = rotate_points_xy_max_samples(points)
     points = rotate_flat_z_micro(points)
 
     xy_samples, x_rows, y_rows = split_samples(points)
@@ -73,23 +76,29 @@ def measure_file_with_images(path, img_handler=None, start_id=None):
 
     points = rotate_each_sample(points)
     img_handler.draw_points4_and_save(points, '3d-rotated-xy')
-    
-    # inter_points, xy_shape = scatter_to_grid_points(points)
-    # img, shape_points = filter_shape_edges(inter_points, xy_shape)
-    # inter_points, xy_shape = scatter_to_grid_points(shape_points)
 
     inter_points, xy_shape = scatter_to_grid_points(points)
     img, shape_points = filter_shape_edges(inter_points, xy_shape)
     points = adjust_zero(inter_points, shape_points)
-    
+
+    #inter_points, xy_shape = scatter_to_grid_points(points)
+    #img_handler.draw_image_and_save(inter_points, xy_shape, 'photo')
+
+    detect_lines(inter_points, xy_shape, plt)
+    #inter_points, xy_shape = scatter_to_grid_points(points)
+    #detect_lines(inter_points, xy_shape, plt)
+    img_handler.save_image('photo')
+
 
     xy_samples, x_rows, y_rows = split_samples(points)
-    print_thinkness_csv_id(xy_samples, x_rows, y_rows, start_id, path)
+    csv_path = print_thinkness_csv_id(xy_samples, x_rows, y_rows, start_id, path)
+    img_handler.show_csv(csv_path)
 
     img_handler.draw_samples_and_save(xy_samples, None, x_rows, y_rows, '2d-matrix', start_id=start_id)
 
 
-    print("Done")
+    dt = time.time() - t0
+    print("Done in {:.1f} seconds".format(dt))
 
 
 def validate_samples_or_fail(xy_samples, points, img_handler):
@@ -122,10 +131,10 @@ def rotate_flat_z(points):
     return points
 
 
-def rotate_points_xy_auto90(points):
+def rotate_points_xy_auto90(points, plt=None):
     print("rotate_points_xy_auto90")
     inter_points, xy_shape = scatter_to_grid_points(points)
-    img, lines = detect_lines(inter_points, xy_shape)
+    img, lines = detect_lines(inter_points, xy_shape, plt=None)
     xy_d = calc_rotate_angle_degree(lines)
     xy_r = deg2rad(xy_d)
     return rotate_points_xy(points, -xy_r)
@@ -207,7 +216,8 @@ def calc_rotate_angle_degree(lines):
                 
             angles.append(a)
         
-    angles =  np.unique(np.around(np.array(angles)/round_degrees)*round_degrees, return_counts=True)
+    print("calc_rotate_angle_degree angles raw: {}".format(angles))
+    angles =  np.unique(np.round(np.array(angles)*round_degrees)/round_degrees, return_counts=True)
     print("calc_rotate_angle_degree angles: {}".format(angles))
     
     most_angles = sorted(np.array(angles).T, key=lambda it: it[1])[-2:]
@@ -271,7 +281,7 @@ def filter_shape_edges(points, xy_shape, plt=None):
     img4 = feature.canny(img2, sigma=5)
     img4a = np.where(img4, 1.0, 0.)
     
-    s = square(5)
+    s = square(10)
     s[:,:] = 0
     s[:,2] = 1
     s[2,:] = 1

@@ -9,11 +9,13 @@ import queue
 import threading
 import multiprocessing
 import traceback
+from datetime import datetime
 
 from sample_measure_lib.draws_io import ImageHandler, build_output_file
 from sample_measure_lib.formats import validate_start_id
 
-IMG_BASE_SIZE = 1024
+IMG_BASE_SIZE_X = 1024
+IMG_BASE_SIZE_Y = 800
 
 
 class IORedirector(object):
@@ -24,6 +26,8 @@ class IORedirector(object):
 class StdoutRedirector(IORedirector):
     
     def write(self, str):
+        if str.strip():
+            str = "{} {}".format(datetime.now().strftime("%H:%M:%S"), str)
         self.text_area.insert(END, str)
 
     def flush(self):
@@ -55,6 +59,9 @@ class TaskQueue():
     def emit_image(self, base_path, name):
         self.queue.put(('image', (base_path, name)))
 
+    def emit_csv(self, path):
+        self.queue.put(('csv', path))
+
     def process_queue(self):
         try:
             for _ in range(100):
@@ -68,6 +75,9 @@ class TaskQueue():
 
                 elif event == 'image':
                     self.action_image(*msg)
+
+                elif event == 'csv':
+                    self.action_csv(msg)
 
         except queue.Empty:
             pass
@@ -90,12 +100,31 @@ class TaskQueue():
         pathLabel.pack()
 
         img = Image.open(img_path)
-        img = img.resize((IMG_BASE_SIZE, int(IMG_BASE_SIZE*img.height/img.width)))
+
+        if img.height > img.width*1.2:
+            img = img.resize((int(IMG_BASE_SIZE_Y*img.width/img.height), IMG_BASE_SIZE_Y))
+        else:
+            img = img.resize((IMG_BASE_SIZE_X, int(IMG_BASE_SIZE_X*img.height/img.width)))
         ph = ImageTk.PhotoImage(img)
         imgLabel = Label(tabImage, image=ph)
         imgLabel.img = ph
-        imgLabel.pack(side = "bottom", fill = "both", expand = "no")
+        imgLabel.pack(side = "top", fill = "both", expand = "no")
         tabs.add(tabImage, text=name)
+
+    def action_csv(self, csv_path):
+
+        tabs = self.root.nametowidget('tabs')
+        tabCsv = Frame(tabs)
+
+        pathLabel = Label(tabCsv, text=csv_path)
+        pathLabel.pack()
+
+        csv_data = open(csv_path, 'r').read()
+        csvText = tk.Text(tabCsv, height=20, width=120)
+        csvText.insert(END, csv_data)
+        csvText.pack()
+        
+        tabs.add(tabCsv, text='csv')
 
 
 class MainWindow():
@@ -174,14 +203,18 @@ class MainWindow():
 
     def handle_run(self):        
         if not self.filename:
+            print("No file is opened")
             return
 
         self.start_id = self.root.nametowidget('frame-id.entry-id').get().strip()
+        if not self.start_id:
+            print("No ID is defined")
+            return
+   
         validate_start_id(self.start_id)
 
         enable_buttons(self.root, False)
         self.reset_tabs()
-
 
         # self.thread = multiprocessing.Process(None, MainWindow.run_worker, args=(self.taskQueue, self.filename, self.start_id))
         # self.thread.start()
@@ -247,6 +280,10 @@ class TabImageHandler(ImageHandler):
         super(TabImageHandler, self).__init__(plt, base_path)
         self.taskQueue = taskQueue
 
-    def save_image(self, base_path, name):
-        super(TabImageHandler, self).save_image(base_path, name)
-        self.taskQueue.emit_image(base_path, name)
+    def save_image(self, name):
+        super(TabImageHandler, self).save_image(name)
+        self.taskQueue.emit_image(self.base_path, name)
+
+    def show_csv(self, path):
+        super(TabImageHandler, self).show_csv(path)
+        self.taskQueue.emit_csv(path)
