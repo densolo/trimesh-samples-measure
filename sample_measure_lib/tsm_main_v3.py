@@ -198,6 +198,9 @@ def scatter_to_grid_points(points):
 
 
 def calc_rotate_angle_degree(lines):
+    if not lines:
+        return 0
+        
     angles = []
     round_degrees = 5
 
@@ -220,7 +223,6 @@ def calc_rotate_angle_degree(lines):
         angles.append(a)
     
     d = sum(angles)/len(angles)
-
     d1 = calc_avg_angle_v1(angles, round_degrees)
 
     print("Found angle: {:6.2f} ({:6.2f})".format(d, d1))
