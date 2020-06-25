@@ -134,7 +134,7 @@ def rotate_flat_z(points):
 def rotate_points_xy_auto90(points, plt=None):
     print("rotate_points_xy_auto90")
     inter_points, xy_shape = scatter_to_grid_points(points)
-    img, lines = detect_lines(inter_points, xy_shape, plt=None)
+    img, lines = detect_lines(inter_points, xy_shape, plt=plt)
     xy_d = calc_rotate_angle_degree(lines)
     xy_r = deg2rad(xy_d)
     return rotate_points_xy(points, -xy_r)
@@ -199,7 +199,7 @@ def scatter_to_grid_points(points):
 
 def calc_rotate_angle_degree(lines):
     angles = []
-    round_degrees = 3
+    round_degrees = 5
 
     for line in lines:
         p0, p1 = line
@@ -207,20 +207,35 @@ def calc_rotate_angle_degree(lines):
         w = p1[0] - p0[0]
         if w and h:
             r = atan(h/w)
-            a = r/consts.degree
+            a = a0 = r/consts.degree
             
             if -90 < a < -45:
                 a = 90 + a
             elif 45 < a < 90:
                 a = a - 90
-                
-            angles.append(a)
-        
-    print("calc_rotate_angle_degree angles raw: {}".format(angles))
-    angles =  np.unique(np.round(np.array(angles)*round_degrees)/round_degrees, return_counts=True)
-    print("calc_rotate_angle_degree angles: {}".format(angles))
+        else:
+            a = a0 = 0
+
+        print("angle: {:6.2f} => {:6.2f} ({})".format(a0, a, np.round(a/round_degrees)*round_degrees))
+        angles.append(a)
     
-    most_angles = sorted(np.array(angles).T, key=lambda it: it[1])[-2:]
+    d = sum(angles)/len(angles)
+
+    d1 = calc_avg_angle_v1(angles, round_degrees)
+
+    print("Found angle: {:6.2f} ({:6.2f})".format(d, d1))
+    return d
+
+
+def calc_avg_angle_v1(angles, round_degrees):
+    angles = np.unique(np.round(np.array(angles)/round_degrees)*round_degrees, return_counts=True)
+    #print("calc_rotate_angle_degree angles: {}".format(angles))
+    
+    most_angles = sorted(np.array(angles).T, key=lambda it: it[1])
+    for it in most_angles:
+        print("{:6.2f}: {:3.0f}".format(it[0], it[1]))
+    
+    most_angles = most_angles[-2:]
     if not most_angles:
         print("Unable to determine rotation angle from {}".format(angles))
         return 0
@@ -228,8 +243,7 @@ def calc_rotate_angle_degree(lines):
     d = sorted(most_angles, key=lambda it: it[0])[0][0]
     print("angles: {}".format(angles))
     angles = [a for a in angles[0] if abs(a - d) < round_degrees/2]
-    d = sum(angles)/len(angles)
-    return d
+    return sum(angles)/len(angles)
 
 
 def interpolate_points(real_points, grid_points, xy_shape):
@@ -259,6 +273,7 @@ def detect_lines(points, xy_shape, plt=None):
     
     print("detect_lines in {}".format(img.shape))
     lines = probabilistic_hough_line(img4, threshold=5, line_length=60, line_gap=20)
+    print("found {} lines".format(len(lines)))
     
     if plt:
         fig = plt.figure(figsize=(20, 10))
@@ -375,16 +390,17 @@ def adjust_zero(inter_points, shape_points):
     return shape_points
 
 
-def rotate_each_sample(points):
+def rotate_each_sample(points, img_handler=None):
     xy_samples, _, _ = split_samples(points)
     new_points = []
     for i, s in enumerate(xy_samples):
         print("--- {} ---".format(i+1))
-        new_points.extend(rotate_new(s))
+        s = rotate_sample(s, i, img_handler)
+        new_points.extend(s)
     return new_points
 
 
-def rotate_new(s): 
+def rotate_sample(s, i=None, img_handler=None): 
     #xy_r = deg2rad(6)
     #s = rotate_points_xy(s, -xy_r)
 
@@ -397,8 +413,12 @@ def rotate_new(s):
     y_arr[:] = [y - y_mid for y in y_arr]
     s = col2points(x_arr, y_arr, z_arr)
 
-    s = rotate_points_xy_auto90(s)
-
+    if img_handler:
+        s = rotate_points_xy_auto90(s, plt)
+        img_handler.save_image("photo-{}".format(i))
+    else:
+        s = rotate_points_xy_auto90(s)
+    
     x_arr, y_arr, z_arr = xyz_cols(s)
     x_arr[:] = [x + x_mid for x in x_arr]
     y_arr[:] = [y + y_mid for y in y_arr]

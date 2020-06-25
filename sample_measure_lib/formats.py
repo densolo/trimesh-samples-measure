@@ -82,7 +82,7 @@ def generate_thinkness_csv_id(xy_samples, x_rows, y_rows, start_id, calc_low=Fal
             heights = sorted(zcol(spoints))
             # print(" {} .. {}".format(heights[:5], heights[-5:]))
             low = sum(heights[:100])/100 if calc_low else 0
-            high = sum(heights[-50:-10])/40
+            high = sum(heights[-45:-5])/40
             #h = '{} .. {}'.format(['{:+.3f}'.format(z) for z in heights[:5]], ['{:+.3f}'.format(z) for z in heights[-5:]])            
             #print("sample {:02d} thickness {:.3f}: x:{:+3.0f} y:{:+3.0f}".format(i+1, high-low, spoints[0][0], spoints[0][1]))
 
