@@ -2,7 +2,7 @@
 from .calcs import *
 
 
-def cacl_x_angles_by_rows(xy_lows, x_rows, y_rows):
+def calc_x_angles_by_rows(xy_lows, x_rows, y_rows):
     x_angles = []
     for i in range(x_rows):
         x_lows = xy_lows[i*y_rows:(i+1)*y_rows]

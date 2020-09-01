@@ -75,7 +75,7 @@ def measure_file_with_images(path, img_handler=None):
 
     # rotate Y/Z
     xy_lows = calc_lows(xy_samples)
-    x_angles = cacl_x_angles_by_rows(xy_lows, x_rows, y_rows)
+    x_angles = calc_x_angles_by_rows(xy_lows, x_rows, y_rows)
     #x_angles = calc_x_angles_by_corners(xy_samples, x_rows, y_rows)
 
     r = sum(x_angles)/len(x_angles)

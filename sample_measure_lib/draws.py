@@ -75,7 +75,7 @@ def draw_samples(plt, xy_samples, xy_lows, x_rows, y_rows, x_color=None, y_color
 
     for i in range(x_rows):
         for j in range(y_rows):
-            k = i + y_rows*j
+            k = i + x_rows*j
             points = xy_samples[k]
 
             if start_id:

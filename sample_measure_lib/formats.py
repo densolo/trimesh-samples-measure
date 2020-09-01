@@ -3,6 +3,7 @@ import os
 import re
 
 from .calcs import *
+import numpy as np
 
 
 def fmt3f(f):
@@ -68,14 +69,16 @@ def generate_thinkness_csv_id(xy_samples, x_rows, y_rows, start_id, calc_low=Fal
         "ID",
         "Z",
         "X",
-        "Y" 
+        "Y",
+        "AVG",
+        "SD"
     ])
 
     validate_start_id(start_id)
     
     for j in range(y_rows):
         for i in range(x_rows):
-            k = i + y_rows*j
+            k = i + j*x_rows
             spoints = xy_samples[k]
             s_id = format_sample_id(i, j, start_id)
 
@@ -93,7 +96,9 @@ def generate_thinkness_csv_id(xy_samples, x_rows, y_rows, start_id, calc_low=Fal
                 s_id,
                 "{:.3f}".format(high-low), 
                 "{:06.3f}".format(x),
-                "{:06.3f}".format(y)
+                "{:06.3f}".format(y),
+                "{:06.3f}".format(np.average(heights)),
+                "{:06.3f}".format(np.std(heights))
             ])
     return lines
 

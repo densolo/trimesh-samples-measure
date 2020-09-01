@@ -171,7 +171,7 @@ def rotate_flat_z_micro(points):
     # rotate X/Z
     xy_samples, x_rows, y_rows = split_samples(points)
     xy_lows = calc_lows(xy_samples)
-    x_angles = cacl_x_angles_by_rows(xy_lows, x_rows, y_rows)
+    x_angles = calc_x_angles_by_rows(xy_lows, x_rows, y_rows)
     #x_angles = calc_x_angles_by_corners(xy_samples, x_rows, y_rows)
 
     r = sum(x_angles)/len(x_angles)

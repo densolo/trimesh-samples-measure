@@ -22,3 +22,21 @@ The final tabs will show csv with dimentions and 2d matrix of visual inspection.
 ![](images/gui-5.png)
 ![](images/gui-6.png)
 ![](images/gui-7.png)
+
+# How to build	
+
+1. Install Python3	
+2. Install dependencies	
+```	
+python -v venv venv	
+source venv/bin/activate	
+python -m pip install -r requirements.txt	
+```
+3. Run (optional)	
+```	
+python tms_gui.py
+```
+4. Build gui	
+```	
+tkinter tms_gui.spec	
+```
