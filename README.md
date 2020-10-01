@@ -38,5 +38,5 @@ python tms_gui.py
 ```
 4. Build gui	
 ```	
-tkinter tms_gui.spec	
+pyinstaller tms_gui.spec	
 ```

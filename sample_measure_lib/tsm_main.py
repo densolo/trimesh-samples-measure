@@ -37,7 +37,8 @@ def main():
         measure_file_with_images(path, img_handler=ImageHandler(plt, path))
     
 
-def measure_file_with_images(path, img_handler=None):
+def measure_file_with_images(path, img_handler=None, start_id=None, gauss_sigma=None, canny_sigma=None):
+
     if img_handler is None:
         img_handler = ImageHandler(plt, path)
 

@@ -52,7 +52,7 @@ def main():
         measure_file_with_images(path, img_handler=ImageHandler(plt, path))
     
 
-def measure_file_with_images(path, img_handler=None, start_id=None):
+def measure_file_with_images(path, img_handler=None, start_id=None, gauss_sigma=None, canny_sigma=None):
     t0 = time.time()
 
     print("measure_file_with_images file: {} ID: {}".format(path, start_id))
@@ -68,7 +68,7 @@ def measure_file_with_images(path, img_handler=None, start_id=None):
     points = rotate_flat_z(points)
     points = rotate_points_xy_auto90(points)
     #points = rotate_points_xy_max_samples(points)
-    points = rotate_flat_z_micro(points)
+    points = measure_file_with_images(points)
 
     xy_samples, x_rows, y_rows = split_samples(points)
 
@@ -78,8 +78,9 @@ def measure_file_with_images(path, img_handler=None, start_id=None):
     img_handler.draw_points4_and_save(points, '3d-rotated-xy')
 
     inter_points, xy_shape = scatter_to_grid_points(points)
-    img, shape_points = filter_shape_edges(inter_points, xy_shape)
-    points = adjust_zero(inter_points, shape_points)
+    img, shape_points = filter_shape_edges(inter_points, xy_shape, gauss_sigma=gauss_sigma, canny_sigma=canny_sigma)
+    points = adjust_zero(inter_points, shape_points)    
+    img_handler.draw_points4_and_save(points, '3d-inter')
 
     #inter_points, xy_shape = scatter_to_grid_points(points)
     #img_handler.draw_image_and_save(inter_points, xy_shape, 'photo')
@@ -87,8 +88,7 @@ def measure_file_with_images(path, img_handler=None, start_id=None):
     detect_lines(inter_points, xy_shape, plt)
     #inter_points, xy_shape = scatter_to_grid_points(points)
     #detect_lines(inter_points, xy_shape, plt)
-    img_handler.save_image('photo')
-
+    img_handler.save_image('photo')    
 
     xy_samples, x_rows, y_rows = split_samples(points)
     csv_path = print_thinkness_csv_id(xy_samples, x_rows, y_rows, start_id, path)
@@ -292,10 +292,10 @@ def detect_lines(points, xy_shape, plt=None):
     return img6, lines
 
 
-def filter_shape_edges(points, xy_shape, plt=None):
+def filter_shape_edges(points, xy_shape, plt=None, gauss_sigma=None, canny_sigma=None):
     img = points[:,2].reshape(xy_shape[1], xy_shape[0])
-    img2 = gaussian_filter(img, sigma=4)
-    img4 = feature.canny(img2, sigma=5)
+    img2 = gaussian_filter(img, sigma=gauss_sigma or 4)
+    img4 = feature.canny(img2, sigma=canny_sigma or 5)
     img4a = np.where(img4, 1.0, 0.)
     
     s = square(10)

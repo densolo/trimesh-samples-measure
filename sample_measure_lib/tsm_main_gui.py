@@ -132,7 +132,7 @@ class MainWindow():
     def __init__(self, root):
         self.root = root
         self.filename = ''
-        self.start_id = ''
+        self.start_id = ''        
         self.thread = None
 
         self.configure()
@@ -154,12 +154,24 @@ class MainWindow():
         
         for _id in ('A1', 'B1', 'C1', 'D1', 'E1', 'F1', 'G1', 'H1'):
             self.__add_id_button(idFrame, _id)
+
+        Label(text="Shape Filters").grid(row=3, column=0, pady=10, padx=10, sticky=E)
+        filterFrame = Frame(self.root, name='frame-filter')
+        filterFrame.grid(row=3, column=1, columnspan=4, pady=10, padx=10, sticky=W)
+
+        Label(filterFrame, text="Gauss").pack(side=LEFT)
+        Entry(filterFrame, width=5, name='entry-gauss').pack(side=LEFT)
+        Label(filterFrame, text="Canny").pack(side=LEFT)
+        Entry(filterFrame, width=5, name='entry-canny').pack(side=LEFT)
+
+        self.root.nametowidget('frame-filter.entry-gauss').insert(0, "2")  # 4
+        self.root.nametowidget('frame-filter.entry-canny').insert(0, "3")  # 5
             
-        Button(text="Run Measures", name='button-run', command=self.handle_run).grid(row=3, column=1, pady=10, padx=10, sticky=W)
+        Button(text="Run Measures", name='button-run', command=self.handle_run).grid(row=4, column=1, pady=10, padx=10, sticky=W)
 
 
         tabs = ttk.Notebook(self.root, name='tabs')
-        tabs.grid(row=4, column=0, columnspan=5)
+        tabs.grid(row=5, column=0, columnspan=5)
 
         tab1 = Frame(tabs, name='tab-output')
         tabs.add(tab1, text='Output')
@@ -206,12 +218,14 @@ class MainWindow():
             print("No file is opened")
             return
 
-        self.start_id = self.root.nametowidget('frame-id.entry-id').get().strip()
+        self.start_id = self.root.nametowidget('frame-id.entry-id').get().strip()        
         if not self.start_id:
             print("No ID is defined")
-            return
-   
+            return           
         validate_start_id(self.start_id)
+
+        gauss_sigma = int(self.root.nametowidget('frame-filter.entry-gauss').get().strip())
+        canny_sigma = int(self.root.nametowidget('frame-filter.entry-canny').get().strip())
 
         enable_buttons(self.root, False)
         self.reset_tabs()
@@ -219,17 +233,17 @@ class MainWindow():
         # self.thread = multiprocessing.Process(None, MainWindow.run_worker, args=(self.taskQueue, self.filename, self.start_id))
         # self.thread.start()
 
-        self.thread = threading.Thread(target=self.run_worker, args=(self.taskQueue, self.filename, self.start_id))
+        self.thread = threading.Thread(target=self.run_worker, args=(self.taskQueue, self.filename, self.start_id, gauss_sigma, canny_sigma))
         self.thread.start()
 
     @staticmethod
-    def run_worker(taskQueue, filename, start_id):
+    def run_worker(taskQueue, filename, start_id, gauss_sigma, canny_sigma):
         from sample_measure_lib.tsm_main_v3 import measure_file_with_images
         import matplotlib
         import matplotlib.pyplot as plt
 
         try:
-            measure_file_with_images(filename, img_handler=TabImageHandler(taskQueue, plt, filename), start_id=start_id)
+            measure_file_with_images(filename, img_handler=TabImageHandler(taskQueue, plt, filename), start_id=start_id, gauss_sigma=gauss_sigma, canny_sigma=canny_sigma)
         except Exception:
             print(traceback.format_exc())
             raise

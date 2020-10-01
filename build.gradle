@@ -5,7 +5,7 @@ plugins {
     id 'distribution'
 }
 
-version = "0.0.7"
+version = "0.0.8"
 
 ext {
     isWindows = OperatingSystem.current().isWindows()
@@ -45,5 +45,11 @@ npmBuild.dependsOn copyCss, npmClean
 
 
 task buildInstaller(type: Exec) {
-    commandLine "pyinstaller", "${projectDir}/tsm_guid.spec", "--workpath=${projectDir}"
+    commandLine "pyinstaller", "${projectDir}/tsm_gui.spec", "--workpath=${projectDir}"
+}
+
+distZip {
+    from 'dist' 
+    include 'tsm_gui.exe'
+    into ''
 }

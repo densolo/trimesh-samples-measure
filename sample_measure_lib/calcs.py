@@ -128,15 +128,25 @@ def split_point_buckets(points, dim, dist):
 
 
 def split_samples(points):
-    xy_samples = []
+    
     y_buckets = split_point_buckets(points, Y_AXIS, 0.5)
+    x_row_samples = []
+    
     for ypoints in y_buckets:
-        xy_samples.extend(split_point_buckets(ypoints, X_AXIS, 0.5))
+        x_row = split_point_buckets(ypoints, X_AXIS, 0.5)
+        x_row = [s for s in x_row if len(s) > 1000]
+        x_row_samples.append(x_row)
 
-    xy_samples = [s for s in xy_samples if len(s) > 1000]
-    print("Found {} samples".format(len(xy_samples)))
+    x_rows = max([len(x_row) for x_row in x_row_samples])
+
+    xy_samples = []
+    for x_row in x_row_samples:
+        xy_samples.extend((x_row + [[(0,0,0)]]*x_rows)[:x_rows])
+    
+    #xy_samples = [s for s in xy_samples if len(s) > 1000]
     y_rows = len(y_buckets)
-    x_rows = len(xy_samples)//y_rows
+    print("Found {} samples {}x{}".format(len(xy_samples), y_rows, x_rows))
+    #x_rows = len(xy_samples)//y_rows
 
     return xy_samples, x_rows, y_rows
 
