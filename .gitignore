@@ -11,3 +11,4 @@ trimesh.code-workspace
 node_modules
 tsm_gui
 *.pyo
+*.iml

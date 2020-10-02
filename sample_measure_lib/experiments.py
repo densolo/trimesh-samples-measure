@@ -86,6 +86,6 @@ def adjust_zero_base(all_points):
     z_min = sum([z[Z_AXIS] for z in z_mins[:z_low_num]])/z_low_num
     z_min_str = ['{:.3f}'.format(m[Z_AXIS]) for m in z_mins[:10]]
     print("Adjust base-level by min Z-value: {:.3f} {}".format(z_min, z_min_str))
-    for p in all_points:
-        p[Z_AXIS] -= z_min
 
+    points = [(p[X_AXIS], p[Y_AXIS], p[Z_AXIS] - z_min) for p in all_points]
+    return points

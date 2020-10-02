@@ -68,7 +68,10 @@ def measure_file_with_images(path, img_handler=None, start_id=None, gauss_sigma=
     points = rotate_flat_z(points)
     points = rotate_points_xy_auto90(points)
     #points = rotate_points_xy_max_samples(points)
-    points = measure_file_with_images(points)
+    #points = measure_file_with_images(points)    
+    
+    points = rotate_flat_z_micro(points)
+    points = adjust_zero_base(points)
 
     xy_samples, x_rows, y_rows = split_samples(points)
 
@@ -79,7 +82,10 @@ def measure_file_with_images(path, img_handler=None, start_id=None, gauss_sigma=
 
     inter_points, xy_shape = scatter_to_grid_points(points)
     img, shape_points = filter_shape_edges(inter_points, xy_shape, gauss_sigma=gauss_sigma, canny_sigma=canny_sigma)
-    points = adjust_zero(inter_points, shape_points)    
+    
+    # points = adjust_zero(inter_points, shape_points)    
+    points = shape_points
+
     img_handler.draw_points4_and_save(points, '3d-inter')
 
     #inter_points, xy_shape = scatter_to_grid_points(points)
@@ -166,6 +172,7 @@ def rotate_points_xy_max_samples(points):
 
 
 def rotate_flat_z_micro(points):
+    print("rotate_flat_z_micro")
     points = points[:]
     
     # rotate X/Z
@@ -385,6 +392,7 @@ def find_space_points(points, grid_step=0.5):
 def adjust_zero(inter_points, shape_points):
     heights = sorted(zcol(inter_points))
     low = sum(heights[:100])/100
+    print("adjust_zero by {}".format(low))
 
     b = np.transpose(shape_points)
     shape_points = np.transpose(np.vstack([b[:2,:], b[2,:] - low]))

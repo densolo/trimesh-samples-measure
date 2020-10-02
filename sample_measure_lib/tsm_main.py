@@ -19,6 +19,7 @@ from sample_measure_lib.draws import *
 from sample_measure_lib.draws_io import ImageHandler, ImageHandlerNull
 from sample_measure_lib.formats import *
 from sample_measure_lib.experiments import *
+from sample_measure_lib.tsm_main_v3 import measure_file_with_images as measure_file_with_images_v3
 
 
 def usage():
@@ -34,8 +35,7 @@ def main():
         exit()
 
     for path in args:
-        measure_file_with_images(path, img_handler=ImageHandler(plt, path))
-    
+        measure_file_with_images_v3(path, img_handler=ImageHandler(plt, path), start_id='A1', gauss_sigma=2, canny_sigma=3)
 
 def measure_file_with_images(path, img_handler=None, start_id=None, gauss_sigma=None, canny_sigma=None):
 
@@ -91,7 +91,7 @@ def measure_file_with_images(path, img_handler=None, start_id=None, gauss_sigma=
     rotate_points_xy_rad(all_points, Y_AXIS, Z_AXIS, -r)
 
     # move up-down to baseline along Z
-    adjust_zero_base(all_points)
+    all_points = adjust_zero_base(all_points)
     x_arr, y_arr, z_arr = xyz_cols(all_points)
 
     xy_samples, _, _ = split_samples(all_points)
